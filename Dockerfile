@@ -1,30 +1,26 @@
-# Étape 1 : Utilisation d'une image Python légère
-FROM python:3.9-slim
+# Utilisation de l'image Node.js certifiée par Red Hat
+FROM registry.access.redhat.com/ubi8/nodejs-16
 
-# Création du groupe et de l'utilisateur non-root
-RUN groupadd -r appgroup && \
-    useradd -r -g appgroup -d /app -s /sbin/nologin appuser
-
-# Définir le répertoire de travail de l'utilisateur
+# Définir le répertoire de travail
 WORKDIR /app
 
-# Copier les fichiers nécessaires au projet
-COPY requirements.txt .
+# Copier le fichier de dépendances
+COPY package*.json ./
 
-# Installation des dépendances
-RUN pip install --no-cache-dir -r requirements.txt
+# Installer les dépendances
+RUN npm install
 
-# Copier l'application Python dans le conteneur
-COPY app.py .
+# Copier le fichier d'application dans le conteneur
+COPY app.js /app
 
-# Changer le propriétaire des fichiers vers l'utilisateur "appuser"
-RUN chown -R appuser:appgroup /app
+# Donner les permissions à tous les utilisateurs
+RUN chmod -R 777 /app
 
-# Changement de l'utilisateur pour éviter l'exécution en tant que root
-USER appuser
+# Exporter le port 3000
+EXPOSE 3000
 
-# Définir le port exposé (interne uniquement)
-EXPOSE 8080
+# Exécuter l'application en tant que non-root
+USER 1001
 
-# Commande par défaut pour démarrer l'application
-CMD ["python", "app.py"]
+# Commande de démarrage
+CMD ["node", "app.js"]
